@@ -1,0 +1,45 @@
+openapi: 3.0.3
+info:
+  title: BioWave Research API
+  version: 1.0.0
+  description: Research-data and experiment API contract. No clinical diagnosis or treatment endpoints.
+paths:
+  /health:
+    get:
+      summary: Service health
+      responses:
+        '200': {description: Healthy}
+  /projects:
+    get:
+      summary: List public cancer research projects
+      parameters:
+        - {name: query, in: query, schema: {type: string}}
+      responses:
+        '200': {description: Provenance-aware project list}
+  /experiments:
+    post:
+      summary: Store a reproducible research experiment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Experiment'}
+      responses:
+        '201': {description: Experiment created}
+  /experiments/{id}:
+    get:
+      summary: Retrieve an experiment and audit metadata
+      parameters: [{name: id, in: path, required: true, schema: {type: string}}]
+      responses:
+        '200': {description: Experiment}
+components:
+  schemas:
+    Experiment:
+      type: object
+      required: [name, createdAt, parameters, provenance]
+      properties:
+        name: {type: string}
+        createdAt: {type: string, format: date-time}
+        parameters: {type: object, additionalProperties: true}
+        provenance: {type: object, additionalProperties: true}
+        results: {type: object, additionalProperties: true}
