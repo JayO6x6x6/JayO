@@ -1,0 +1,13 @@
+import {spectrum,stft,features} from './research-engine.js';
+import {searchGdcProjects,provenanceEnvelope} from './data-sources.js';
+import {saveExperiment,loadExperiments,exportJSON,exportCSV,audit} from './experiment-store.js';
+import {imageBasicFeatures} from './ml-image-analysis.js';
+const $=id=>document.getElementById(id);
+const pages=[...document.querySelectorAll('section')];document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{pages.forEach(p=>p.classList.toggle('active',p.id===b.dataset.page));});
+$('loadData').onclick=async()=>{ $('dataOut').textContent='Querying NCI Genomic Data Commons…';try{const r=await searchGdcProjects('TCGA');$('dataOut').textContent=JSON.stringify(r,null,2);audit('gdc.projects.loaded',{count:r.data.length,provenance:r.provenance});}catch(e){$('dataOut').textContent='Data request failed: '+e.message;}};
+$('runSignal').onclick=()=>{const f=+$('sigFreq').value,sr=+$('sigRate').value,sec=+$('sigSec').value,n=Math.min(4096,2**Math.floor(Math.log2(sr*sec)));const x=Array.from({length:n},(_,i)=>Math.sin(2*Math.PI*f*i/sr)+.35*Math.sin(2*Math.PI*f*2.5*i/sr)+.1*(Math.random()-.5));const fs=features(x,sr),tf=stft(x,sr,256,128);$('signalOut').textContent=JSON.stringify({provenance:{source:'BioWave synthetic benchmark',generatedAt:new Date().toISOString()},features:fs,stft:{windowSize:256,hopSize:128,frames:tf.length}},null,2);audit('signal.analyzed',fs)};
+$('saveExp').onclick=()=>{const e=saveExperiment({name:$('expName').value,parameters:{frequencyHz:+$('expFreq').value,nodes:+$('expNodes').value,phaseDeg:+$('expPhase').value},provenance:{dataType:'synthetic',source:'BioWave cymatics engine'},results:{status:'parameterized-run'}});$('expOut').textContent=JSON.stringify(loadExperiments(),null,2)};
+$('refreshAudit').onclick=()=>{$('auditOut').textContent=localStorage.getItem('biowave.audit.v1')||'No audit records yet.'};
+$('exportJson').onclick=()=>exportJSON({experiments:loadExperiments(),audit:JSON.parse(localStorage.getItem('biowave.audit.v1')||'[]')});
+$('exportCsv').onclick=()=>exportCSV(loadExperiments().map(x=>({id:x.id,name:x.name,createdAt:x.createdAt,...x.parameters,...x.results})));
+$('img').onchange=e=>{const file=e.target.files[0];if(!file)return;const img=new Image();img.onload=()=>{const c=$('imgCanvas'),ctx=c.getContext('2d');ctx.drawImage(img,0,0,224,224);const f=imageBasicFeatures(ctx.getImageData(0,0,224,224));$('imgOut').textContent=JSON.stringify({file:{name:file.name,type:file.type,size:file.size},features:f,note:'Non-diagnostic image descriptors only.'},null,2);audit('image.features.extracted',{name:file.name,features:f})};img.src=URL.createObjectURL(file)};
