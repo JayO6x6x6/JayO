@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Synthetic wave benchmark",
+  "createdAt": "2026-08-27T00:00:00Z",
+  "operator": "demo",
+  "hypothesis": "Compare synthetic signal profiles under controlled parameter changes.",
+  "parameters": {
+    "sampleRateHz": 2000,
+    "windowSize": 256,
+    "hopSize": 128,
+    "frequenciesHz": [120, 240, 360],
+    "replicates": 3
+  },
+  "controls": {
+    "controlDefinition": "Matched synthetic baseline",
+    "blinding": "not_applicable"
+  },
+  "provenance": {
+    "dataType": "synthetic",
+    "source": "BioWave Research Engine",
+    "sourceVersion": "1.0.0"
+  },
+  "results": {},
+  "audit": []
+}
